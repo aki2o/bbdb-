@@ -270,13 +270,13 @@
              (buff (when do-update (get-buffer bbdb-::buffer-name))))
         (when (buffer-live-p buff)
           (with-current-buffer buff
-            (setq buffer-read-only nil)
             (bbdb-:--trace "start update record visibility by [%s]" iptvalue)
+            (setq buffer-read-only nil)
             (when (< (length iptvalue)
                      (length bbdb-::last-grep-record-value))
               ;; If input is shorter than last time value,
               ;; At the beginning, try to back old contents.
-              (or (bbdb-::restore-record (current-buffer))
+              (or (bbdb-::restore-record (current-buffer) (point))
                   (bbdb-::set-visibility (point-min) (point-max) nil)))
             (setq bbdb-::last-grep-record-value iptvalue)
             (save-excursion
@@ -314,9 +314,8 @@
                     (bbdb-:--warn "failed hide record : %s\n%s"
                                   (yaxception:get-text e)
                                   (yaxception:get-stack-trace-string e))))))
-            (goto-char (point-min))
-            (bbdb-:next-record t)
-            (setq buffer-read-only t)))))
+            (setq buffer-read-only t)
+            (bbdb-:--trace "finished update record visibility by [%s]" iptvalue)))))
     (yaxception:catch 'error e
       (bbdb-::show-message "Failed search record : %s" (yaxception:get-text e))
       (bbdb-:--error "failed grep record : %s\n%s"
@@ -536,13 +535,17 @@
         (kill-buffer buff))
       (yaxception:throw e))))
 
-(defun bbdb-::restore-record (buff)
+(defun bbdb-::restore-record (buff &optional pt)
   (bbdb-:--trace "start restore record to %s" (buffer-name buff))
   (let ((bkupbuff (get-buffer bbdb-::bkup-buffer-name)))
     (if (not (buffer-live-p bkupbuff))
         (bbdb-:--info "not alive bbdb- bkup buffer")
       (with-current-buffer bkupbuff
         (copy-to-buffer buff 1 (point-max))
+        (bbdb-:--trace "finished restore record")
+        (when pt
+          (bbdb-:--trace "try to move to point : %s" pt)
+          (ignore-errors  (goto-char pt)))
         t))))
 
 
@@ -597,9 +600,11 @@
 
 (defsubst bbdb-::message-get-next-header-startpt (&optional header-endpt)
   (save-excursion
-    (when (re-search-forward "^[A-Z][a-zA-Z0-9-]+: " (or header-endpt (bbdb-::message-get-header-endpt)) t)
-      (beginning-of-line)
-      (point))))
+    (let ((endpt (or header-endpt (bbdb-::message-get-header-endpt))))
+      (when (and (> endpt (point))
+                 (re-search-forward "^[A-Z][a-zA-Z0-9-]+: " endpt t))
+        (beginning-of-line)
+        (point)))))
 
 (defun bbdb-::message-move-header (header)
   (let* ((headernm (or (when (stringp header) (capitalize header))
@@ -644,8 +649,7 @@
 (defun bbdb-::message-update-rcpt (torcpts ccrcpts bccrcpts)
   (bbdb-:--trace "start message update rcpt")
   (save-excursion
-    (loop with header-endpt = (bbdb-::message-get-header-endpt)
-          for e in '((to  . torcpts)
+    (loop for e in '((to  . torcpts)
                      (cc  . ccrcpts)
                      (bcc . bccrcpts))
           for header = (car e)
@@ -656,8 +660,9 @@
                                        (bbdb-::message-insert-header header))
                               (point)))
           for endpt = (when startpt
-                        (or (bbdb-::message-get-next-header-startpt header-endpt)
-                            header-endpt))
+                        (let ((header-endpt (bbdb-::message-get-header-endpt)))
+                          (or (bbdb-::message-get-next-header-startpt header-endpt)
+                              header-endpt)))
           do (cond ((and startpt rcpts)
                     ;; If user select exists and move/insert to header, replace them
                     (delete-region startpt endpt)
@@ -778,7 +783,11 @@
           (when migemomsg
             (put-text-property 0 (- (length migemomsg) 1) 'face migemo-message-prefix-face prompt))
           (bbdb-::start-grep-record)
-          (read-from-minibuffer prompt initial-input bbdb-::grep-record-map)))
+          (let ((ipt (read-from-minibuffer prompt initial-input bbdb-::grep-record-map)))
+            (when (not (string= ipt ""))
+              (goto-char (point-min))
+              (bbdb-:next-record t))))
+        (bbdb-:--trace "finished search record"))
       (yaxception:catch 'error e
         (bbdb-::show-message "Failed search record : %s" (yaxception:get-text e))
         (bbdb-:--error "failed search record : %s\n%s"
@@ -806,9 +815,10 @@
         (if (not (buffer-live-p buff))
             (bbdb-:--info "not alive bbdb- buffer")
           (with-current-buffer buff
-            (setq buffer-read-only nil)
-            (bbdb-::restore-record (current-buffer))
-            (setq buffer-read-only t)))))
+            (save-excursion
+              (setq buffer-read-only nil)
+              (bbdb-::restore-record (current-buffer) (point))
+              (setq buffer-read-only t))))))
     (yaxception:catch 'error e
       (bbdb-::show-message "Failed search record : %s" (yaxception:get-text e))
       (bbdb-:--error "failed abort search record : %s\n%s"
@@ -825,7 +835,9 @@
       (yaxception:try
         (bbdb-:--trace "start show all record")
         (setq buffer-read-only nil)
-        (bbdb-::set-visibility (point-min) (point-max) nil))
+        (bbdb-::set-visibility (point-min) (point-max) nil)
+        (goto-char (point-min))
+        (bbdb-:next-record t))
       (yaxception:catch 'error e
         (bbdb-::show-message "Failed show all record : %s" (yaxception:get-text e))
         (bbdb-:--error "failed show all record : %s\n%s"
