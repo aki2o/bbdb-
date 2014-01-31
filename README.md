@@ -38,7 +38,7 @@ Install
 
 ### If use package.el
 
-2014/01/31 Not yet available.  
+2014/02/01 It's available by using melpa.  
 
 ### If use el-get.el
 
@@ -120,6 +120,10 @@ The bbdb- buffer, which is named \*bbdb-\* and shown at the start, have the foll
 * **R** ... Reload the latest record of BBDB
 * **q** ... Finish with doing nothing
 * **RET** ... Finish with the update of To/Cc/Bcc header (if necessary, open the mail buffer)
+
+
+Attention
+=========
 
 ### If you update record of BBDB
 
