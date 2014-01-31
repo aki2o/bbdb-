@@ -122,8 +122,8 @@ The bbdb- buffer, which is named \*bbdb-\* and shown at the start, have the foll
 * **RET** ... Finish with the update of To/Cc/Bcc header (if necessary, open the mail buffer)
 
 
-Attention
-=========
+Consideration
+=============
 
 ### If you update record of BBDB
 
