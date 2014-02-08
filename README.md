@@ -42,7 +42,7 @@ Install
 
 ### If use el-get.el
 
-2014/01/31 Not yet available.  
+2014/02/02 It's available. But, master branch only.  
 
 ### If use auto-install.el
 
