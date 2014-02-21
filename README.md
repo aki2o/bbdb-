@@ -77,7 +77,7 @@ Configuration
 ```lisp
 (require 'bbdb-)
 
-;; If necessary, customize arbitrarily. About item of customize, eval the following sexp.
+;; Make config suit for you. About the config item, eval the following sexp.
 ;; (customize-group "bbdb-")
 
 ;; Do setup

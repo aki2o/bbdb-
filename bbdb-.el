@@ -6,7 +6,7 @@
 ;; Keywords: bbdb, news, mail
 ;; URL: https://github.com/aki2o/bbdb-
 ;; Package-Requires: ((bbdb "20140123.1541") (log4e "0.2.0") (yaxception "0.1"))
-;; Version: 0.0.1
+;; Version: 0.0.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -42,9 +42,10 @@
 
 ;;; Configuration:
 ;; 
-;; (bbdb-:setup)
+;; ;; Make config suit for you. About the config item, see Customization or eval the following sexp.
+;; ;; (customize-group "bbdb-")
 ;; 
-;; About other configuration, eval (customize-group "bbdb-")
+;; (bbdb-:setup)
 
 ;;; Customization:
 ;; 
